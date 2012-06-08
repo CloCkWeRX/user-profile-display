@@ -2,7 +2,7 @@
 /**
  * A model describing a person
  */
-class Person {
+class Person implements JsonSerializable {
     protected $name;
     protected $age;
     protected $description;
@@ -12,7 +12,7 @@ class Person {
         $this->name = (string)$name;
         $this->age = (int)$age;
         $this->description = (string)$description;
-        $this->description = (string)$description;
+        $this->img = (string)$img;
     }
 
     public function getName() {
@@ -24,11 +24,23 @@ class Person {
     }
 
     public function getDescription() {
-        return $this->name;
+        return $this->description;
     }
 
     public function getPicture() {
         return $this->img;
+    }
+
+	/**
+	 * Shiny new PHP 5.4+ method of doing this.
+	 */
+    public function jsonSerialize() {
+        return array(
+			"name" => $this->getName(),
+			"picture" => $this->getPicture(),
+			"description" => $this->getDescription(),
+			"age" => $this->getAge(),
+		);
     }
 }
 
@@ -131,7 +143,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'display') {
     }
 
     header('content-type: application/json');
-    print json_encode($locator->display($start, 2));
+	print json_encode($locator->display($start, 2));
     die();
 }
 
@@ -142,26 +154,32 @@ if (isset($_GET['action']) && $_GET['action'] == 'display') {
  <head>
   <title>Our team</title>
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-
+  <!-- TODO: Should be more polite and add as a git submodule -->
+  <script type="text/javascript" src="https://raw.github.com/jquery/jquery-tmpl/master/jquery.tmpl.js"></script>
   <script type="text/javascript">
 	/** @todo Go grab some other existing control */
 	var paginator = {
 		pos: 0,
+	    increment: 2,
 		next: function() {
-			this.pos++;
+			paginator.pos += paginator.increment;
+
+			paginator.load();
 		},
 		prev: function() {
-			if (this.pos > 0)
+			if (paginator.pos - paginator.increment > 0)
 			{
-				this.pos--;
+				paginator.pos -= paginator.increment;
+				paginator.load();
 			}
 		},
 	    load: function () {
 			$.ajax({
-					url: '?action=display&start=' + this.pos,
+					url: '?action=display&start=' + paginator.pos,
 					dataType: 'json',
 					success: function( response ) {
-						$( '#profileTemplate' ).render( response ).appendTo( "#results" );
+						$("#results *").remove();
+						$( '#profileTemplate' ).tmpl(response).appendTo("#results");
 					}
 				});
 		}
@@ -171,26 +189,54 @@ if (isset($_GET['action']) && $_GET['action'] == 'display') {
   <style type="text/css">
 	body {
 		background-color: rgb(240, 240, 240);
-		margin: 2em;
+		margin: auto;
+		font-family: Arial;
+		font-size: 10pt;
+		width: 400px;
     }
 
+	h1, h2 {
+		font-family: Verdana;
+	}
+
 	img.picture {
-		max-width: 100px;
-		max-height: 150px;
+		width: 100px;
+		height: 80px;
+		border: 1px solid black;
     }
+
+	.profile {
+		float: left;
+		border: 1px solid rgb(230, 230, 230);
+		padding: 0.5em;
+		margin: 0.1em;
+		max-width: 180px;
+		height: 200px;
+	}
+
+
+	#results {
+		clear: both;
+	}
   </style>
  </head>
 
  <body>
   <h1>Our team</h1>
-
-  <div id="results">
-     <script type="text/template" id="profileTemplate">
-        <h2 class="name">${name}, ${age}</h2>
-        <img src="" class="picture" alt="{$name"}/>
-        <p class="description">${description}</p>
+  <p>The Channel 4 news team is a go-get-'em, action packed collection of adrenaline fueled <s>paper pushers who find their content on youtube</s> journalists. Meet the dynamic duos below!</p>
+  <div id="results"></div>
+       <script type="text/template" id="profileTemplate">
+		 <div class="profile">
+		    <h2 class="name">${name}, ${age}</h2>
+			<img src="${picture}" class="picture" alt="{$name}" />
+			<p class="description">${description}</p>
+		</div>
      </script>
-  </div>
-  
+   <p><a href="#results" onclick="paginator.prev(); return false;">Prev</a> <a href="#results" onclick="paginator.next(); return false;">Next</a></p>
+
+   <script type="text/javascript">
+   paginator.load();
+   </script>
+
  </body>
 </html>
