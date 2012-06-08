@@ -56,12 +56,13 @@ class PersonLocator {
     /**
      * List a number of people from the data store
      */
-    public function display($start = 0, $max = 2) {
+    public function display($start, $max = 2) {
         $people = array();
 
         /** @todo If we had a real DB layer, we'd avoid sql injection better */
         $results = $this->db->query(
-            "SELECT name, age, description, img FROM person LIMIT " . (int)$max . " OFFSET " . (int)$start
+            "SELECT name, age, description, img FROM person LIMIT " . (int)$max . " OFFSET " . (int)$start,
+			$start
         );
 
 
@@ -90,43 +91,46 @@ class PersonLocator {
  */
 class DB {
 
-    public function query($sql) {
-        $start = "SELECT name, age, description, img FROM person ";
-        
-        switch (str_replace($start, "", $sql)) {
-            default:
-            case " LIMIT 2 OFFSET 0":
-                return array(
-                    array(
-                        "name" => "Dave",
-                        "age" => "67",
-                        "description" => "Dave enjoys long sandy walks on the beach.",
-                        "img" => 'http://upload.wikimedia.org/wikipedia/commons/8/80/Knut_IMG_8095.jpg'
-                    ),
-                    array(
-                        "name" => "Bob",
-                        "age" => "55",
-                        "description" => "Bob is Dave's life long nemisis.",
-                        "img" => "http://4.bp.blogspot.com/-QLhr8jQKnUk/TcsGPThR30I/AAAAAAAABsU/GaQiKHQlvFA/s1600/bob-marley-happy.jpg"
-                    ),
-                );
-            break;
-            case " LIMIT 2 OFFSET 2":
-                return array(
-                    array(
-                        "name" => "Martin",
-                        "age" => "21",
-                        "description" => "Martin plots constantly to own a private island. He is often quoted as refusing to allow Dave to walk upon it, should he ever obtain the funds.",
-                        "img" => "http://www.fluidosol.se/MartinJuly08-small.jpg"
-                    ),
-                    array(
-                        "name" => "Sally",
-                        "age" => "33",
-                        "description" => "Sally is the cat herder of the team, often acting as an arbitrator between heated infighting",
-                        "img" => "http://www.nndb.com/people/607/000023538/struthers1-sized.jpg"
-                    ),
-                );
-        }
+    public function query($sql, $start) {
+		$all = array(
+					array(
+						"name" => "Dave",
+						"age" => "67",
+						"description" => "Dave enjoys long sandy walks on the beach.",
+						"img" => 'http://upload.wikimedia.org/wikipedia/commons/8/80/Knut_IMG_8095.jpg'
+					),
+					array(
+						"name" => "Bob",
+						"age" => "55",
+						"description" => "Bob is Dave's life long nemisis.",
+						"img" => "http://4.bp.blogspot.com/-QLhr8jQKnUk/TcsGPThR30I/AAAAAAAABsU/GaQiKHQlvFA/s1600/bob-marley-happy.jpg"
+					),
+					array(
+						"name" => "Martin",
+						"age" => "21",
+						"description" => "Martin plots constantly to own a private island. He is often quoted as refusing to allow Dave to walk upon it, should he ever obtain the funds.",
+						"img" => "http://www.fluidosol.se/MartinJuly08-small.jpg"
+					),
+					array(
+						"name" => "Sally",
+						"age" => "33",
+						"description" => "Sally is the cat herder of the team, often acting as an arbitrator between heated infighting",
+						"img" => "http://www.nndb.com/people/607/000023538/struthers1-sized.jpg"
+					),
+		);
+
+		switch ($start % sizeof($all)) {
+			default:
+			case 0:
+				return array($all[0], $all[1]);
+			case 1:
+				return array($all[1], $all[2]);
+			case 2:
+				return array($all[2], $all[3]);
+			case 3:
+				return array($all[3], $all[0]);
+		}
+
     }
 
 }
@@ -160,7 +164,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'display') {
 	/** @todo Go grab some other existing control */
 	var paginator = {
 		pos: 0,
-	    increment: 2,
+	    increment: 1,
 		next: function() {
 			paginator.pos += paginator.increment;
 
@@ -211,7 +215,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'display') {
 		padding: 0.5em;
 		margin: 0.1em;
 		max-width: 180px;
-		height: 200px;
+		height: 230px;
 	}
 
 
