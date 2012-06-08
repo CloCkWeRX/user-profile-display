@@ -197,6 +197,11 @@ if (isset($_GET['action']) && $_GET['action'] == 'display') {
 		font-family: Arial;
 		font-size: 10pt;
 		width: 400px;
+
+		background: url("http://clipartist.info/Art/colouringbook/aardvark-31px.png");
+		background-repeat: no-repeat;
+		background-attachment: fixed;
+		background-position: right bottom;
     }
 
 	h1, h2 {
