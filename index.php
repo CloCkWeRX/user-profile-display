@@ -49,7 +49,7 @@ class PersonLocator {
 
         /** @todo If we had a real DB layer, we'd avoid sql injection better */
         $results = $this->db->query(
-            "SELECT name, age, description, img FROM person LIMIT " . (int)$max . " OFFSET " . (int)$start;
+            "SELECT name, age, description, img FROM person LIMIT " . (int)$max . " OFFSET " . (int)$start
         );
 
 
